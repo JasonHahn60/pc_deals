@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles below */
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+  h1 {
+    @apply text-3xl font-bold text-gray-900;
+  }
+  h2 {
+    @apply text-2xl font-semibold text-gray-800;
+  }
+  h3 {
+    @apply text-xl font-semibold text-gray-800;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-all duration-200 ease-in-out;
+  }
+  .btn-primary {
+    @apply btn bg-primary-DEFAULT text-white hover:bg-primary-dark hover:shadow-soft;
+  }
+  .btn-secondary {
+    @apply btn bg-secondary-DEFAULT text-white hover:bg-secondary-dark hover:shadow-soft;
+  }
+  .card {
+    @apply bg-white rounded-lg shadow-soft p-6 transition-all duration-200 hover:shadow-lg;
+  }
+  .input {
+    @apply w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent;
+  }
+  .nav-link {
+    @apply text-gray-600 hover:text-primary-DEFAULT transition-colors duration-200;
+  }
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
