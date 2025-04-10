@@ -86,11 +86,38 @@ function App() {
               <Route path="/admin" element={<Admin />} />
               <Route path="/" element={
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Market Snapshot - Full Width */}
+                  <div className="mb-8">
                     <div className="bg-white rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Market Snapshot</h2>
                       <MarketSnapshot />
                     </div>
+                  </div>
+
+                  {/* Two Column Layout for Favorites/Alerts and Price History */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Left Column - Favorites and Alerts */}
+                    <div className="space-y-8">
+                      {user && (
+                        <>
+                          <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-semibold mb-4">Favorite GPUs</h2>
+                            <FavoriteList user={user} token={token} />
+                          </div>
+                          <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-semibold mb-4">Price Alerts</h2>
+                            <PriceAlerts 
+                              user={user}
+                              token={token}
+                              notificationPreferences={notificationPreferences}
+                              setNotificationPreferences={setNotificationPreferences}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Right Column - Price History */}
                     <div className="bg-white rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Price History</h2>
                       <GPUPriceHistoryViewer 
@@ -102,23 +129,6 @@ function App() {
                       />
                     </div>
                   </div>
-                  {user && (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">Favorite GPUs</h2>
-                        <FavoriteList user={user} token={token} />
-                      </div>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">Price Alerts</h2>
-                        <PriceAlerts 
-                          user={user}
-                          token={token}
-                          notificationPreferences={notificationPreferences}
-                          setNotificationPreferences={setNotificationPreferences}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </>
               } />
             </Routes>
