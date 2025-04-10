@@ -79,7 +79,6 @@ pc-deals/
 └── .env                   # Environment variables
 ```
 
-## Notes for Recruiters
 
 This project demonstrates:
 - Full-stack development with modern technologies
