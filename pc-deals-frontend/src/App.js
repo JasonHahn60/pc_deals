@@ -6,151 +6,206 @@ import PriceAlerts from "./components/PriceAlerts";
 import MarketSnapshot from "./components/MarketSnapshot";
 import Admin from './pages/Admin';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [selectedModel, setSelectedModel] = useState("");
+  const [model, setModel] = useState("");
+  const [favorites, setFavorites] = useState([]);
   const [notificationPreferences, setNotificationPreferences] = useState([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Check for stored token and user info on initial load
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && parsed.user_id) {  // Only set user and fetch favorites if we have a valid user_id
+          setUser(parsed);
+          fetchFavorites(parsed.user_id);
+        }
+      } catch (err) {
+        console.error("Error parsing stored user:", err);
+        localStorage.removeItem("user");  // Clear invalid data
+      }
     }
   }, []);
 
-  const handleLoginSuccess = (userData, authToken) => {
-    setUser(userData);
-    setToken(authToken);
-    localStorage.setItem('token', authToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && parsed.user_id) {
+          fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${parsed.user_id}`, {
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            }
+          })
+            .then(res => res.json())
+            .then(data => setNotificationPreferences(data))
+            .catch(err => console.error("Error fetching preferences:", err));
+        }
+      } catch (err) {
+        console.error("Error parsing stored user:", err);
+      }
+    }
+  }, [user]);
 
-  const handleLogout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  };
-
-  const handleFavoriteAdded = () => {
-    // Refresh favorites list
-    if (user) {
-      fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${user.id}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
-        .then(res => res.json())
-        .catch(err => console.error("Error fetching favorites:", err));
+  const handleLoginSuccess = () => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && parsed.user_id) {  // Only set user and fetch favorites if we have a valid user_id
+          setUser(parsed);
+          fetchFavorites(parsed.user_id);
+        }
+      } catch (err) {
+        console.error("Error parsing stored user:", err);
+      }
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    setFavorites([]);
+  };
+
+  const fetchFavorites = (userId) => {
+    const token = localStorage.getItem("token");
+  
+    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${userId}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setFavorites(data);
+        } else {
+          console.warn("Unexpected response shape");
+          setFavorites([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching favorites:", err);
+        setFavorites([]);
+      });
+  };
+
+  const handleRemoveFavorite = (model) => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+    if (!storedUser || !token) return;
+
+    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${storedUser.user_id}&model=${encodeURIComponent(model)}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => res.json())
+      .then(() => fetchFavorites(storedUser.user_id));
+  };
+
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          {/* Navigation */}
-          <nav className="bg-white shadow-soft sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex-shrink-0 flex items-center">
-                  <svg className="h-8 w-8 text-primary-DEFAULT" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                  </svg>
-                  <h1 className="ml-2 text-2xl font-bold text-gray-900">GPU Price Tracker</h1>
-                </div>
-                
-                {/* Desktop navigation */}
-                <div className="hidden sm:flex sm:items-center sm:ml-6">
-                  <UserAuthForm onLoginSuccess={handleLoginSuccess} onLogout={handleLogout} />
-                  {user && user.isAdmin && (
-                    <Link to="/admin" className="ml-4 text-gray-700 hover:text-gray-900">
-                      Admin Dashboard
-                    </Link>
-                  )}
-                </div>
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        {/* Navigation */}
+        <nav className="bg-white shadow-soft sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex-shrink-0 flex items-center">
+                <svg className="h-8 w-8 text-primary-DEFAULT" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+                <h1 className="ml-2 text-2xl font-bold text-gray-900">GPU Price Tracker</h1>
+              </div>
+              
+              {/* Desktop navigation */}
+              <div className="hidden sm:flex sm:items-center sm:ml-6">
+                <UserAuthForm onLoginSuccess={handleLoginSuccess} onLogout={handleLogout} />
+                {user && user.isAdmin && (
+                  <Link to="/admin" className="ml-4 text-gray-700 hover:text-gray-900">
+                    Admin Dashboard
+                  </Link>
+                )}
               </div>
             </div>
-          </nav>
+          </div>
+        </nav>
 
-          {/* Main Content */}
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Routes>
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/" element={
-                <>
-                  {/* Market Snapshot - Full Width */}
-                  <div className="mb-8">
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <h2 className="text-xl font-semibold mb-4">Market Snapshot</h2>
-                      <MarketSnapshot />
-                    </div>
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Routes>
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/" element={
+              <>
+                <div className="mb-8">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-xl font-semibold mb-4">Market Snapshot</h2>
+                    <MarketSnapshot />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-8">
+                  <div className="col-span-1 space-y-8">
+                    {user && (
+                      <>
+                        <div className="bg-white rounded-lg shadow p-6">
+                          <h2 className="text-xl font-semibold mb-4">Favorite GPUs</h2>
+                          <FavoriteList 
+                            favorites={favorites} 
+                            onRemove={handleRemoveFavorite}
+                          />
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                          <h2 className="text-xl font-semibold mb-4">Price Alerts</h2>
+                          <PriceAlerts 
+                            preferences={notificationPreferences}
+                            setPreferences={setNotificationPreferences}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* Two Column Layout for Favorites/Alerts and Price History */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Left Column - Favorites and Alerts */}
-                    <div className="space-y-8">
-                      {user && (
-                        <>
-                          <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-semibold mb-4">Favorite GPUs</h2>
-                            <FavoriteList user={user} token={token} />
-                          </div>
-                          <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-semibold mb-4">Price Alerts</h2>
-                            <PriceAlerts 
-                              user={user}
-                              token={token}
-                              notificationPreferences={notificationPreferences}
-                              setNotificationPreferences={setNotificationPreferences}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Right Column - Price History */}
+                  <div className="col-span-2">
                     <div className="bg-white rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Price History</h2>
                       <GPUPriceHistoryViewer 
-                        model={selectedModel}
-                        setModel={setSelectedModel}
-                        onFavoriteAdded={handleFavoriteAdded}
-                        notificationPreferences={notificationPreferences}
-                        setNotificationPreferences={setNotificationPreferences}
+                        model={model}
+                        setModel={setModel}
+                        onFavoriteAdded={fetchFavorites}
                       />
                     </div>
                   </div>
-                </>
-              } />
-            </Routes>
-          </main>
+                </div>
+              </>
+            } />
+          </Routes>
+        </main>
 
-          {/* Footer */}
-          <footer className="bg-white mt-12 border-t border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="text-center">
-                <p className="text-gray-600">© 2025 GPU Deal Analyzer. All rights reserved.</p>
-                <p className="text-gray-500 mt-2">
-                  <em>Powered by Spring Boot & React</em>
-                </p>
-                <p className="text-gray-400 text-sm mt-2">
-                  Disclaimer: Prices and listings are for informational purposes only.
-                </p>
-              </div>
+        {/* Footer */}
+        <footer className="bg-white mt-12 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center">
+              <p className="text-gray-600">© 2025 GPU Deal Analyzer. All rights reserved.</p>
+              <p className="text-gray-500 mt-2">
+                <em>Powered by Spring Boot & React</em>
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                Disclaimer: Prices and listings are for informational purposes only.
+              </p>
             </div>
-          </footer>
-        </div>
-      </Router>
-    </AuthProvider>
+          </div>
+        </footer>
+      </div>
+    </Router>
   );
 }
 
