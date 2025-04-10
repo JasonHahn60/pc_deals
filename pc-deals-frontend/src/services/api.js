@@ -75,30 +75,3 @@ export const setNotificationPreference = async (userId, gpuModel, priceThreshold
   );
   return handleResponse(response);
 };
-
-export const fetchOutliers = async (threshold, token) => {
-  const response = await fetch(`${API_URL}/api/gpus/listings/outliers?threshold=${threshold}`, {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-    },
-  });
-  return handleResponse(response);
-};
-
-export const deleteOutliers = async (threshold, token) => {
-  const response = await fetch(`${API_URL}/api/gpus/listings/delete-outliers?threshold=${threshold}`, {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-    },
-  });
-  return handleResponse(response);
-};
-
-export const fetchNewListings = async (token) => {
-  const response = await fetch(`${API_URL}/api/reddit/fetch-save-new`, {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-    },
-  });
-  return handleResponse(response);
-};

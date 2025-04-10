@@ -40,24 +40,21 @@ public class JwtFilter implements Filter {
             for (String allowedOrigin : allowedOriginsArray) {
                 if (origin.trim().equals(allowedOrigin.trim())) {
                     res.setHeader("Access-Control-Allow-Origin", origin);
-                    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-                    res.setHeader("Access-Control-Allow-Credentials", "true");
-                    res.setHeader("Access-Control-Max-Age", "3600");
-                    
-                    // Handle preflight requests
-                    if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
-                        res.setStatus(HttpServletResponse.SC_OK);
-                        return;
-                    }
                     break;
                 }
             }
         }
 
-        // If origin is not allowed, don't set any CORS headers
-        // This effectively blocks direct API access from browsers
-        
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+
+        // ✅ Allow preflight OPTIONS request to go through
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            res.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
         // 🔐 Token validation for protected endpoints
         String path = req.getRequestURI();
         String authHeader = req.getHeader("Authorization");
