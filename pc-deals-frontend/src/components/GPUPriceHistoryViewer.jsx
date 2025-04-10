@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import PriceHistoryChart from "./PriceHistoryChart";
 import GPUSelector from "./GPUSelector";
 
@@ -42,13 +42,13 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
         .then(data => setNotificationPreferences(data))
         .catch(err => console.error("Error fetching preferences:", err));
     }
-  }, []);
+  }, [setNotificationPreferences]);
 
-  const handleModelSelect = (selectedModel) => {
+  const handleModelSelect = useCallback((selectedModel) => {
     setModel(selectedModel);
-  };
+  }, [setModel]);
 
-  const handlePriceSubmit = (e) => {
+  const handlePriceSubmit = useCallback((e) => {
     e.preventDefault();
     if (!price || isNaN(price)) return;
 
@@ -56,9 +56,9 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
       .then((res) => res.json())
       .then((data) => setAnalysis(data))
       .catch((err) => console.error("Error analyzing price:", err));
-  };
+  }, [model, price]);
 
-  const handleAddNotification = async (e) => {
+  const handleAddNotification = useCallback(async (e) => {
     e.preventDefault();
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
@@ -96,9 +96,9 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
       setMessage("Error adding notification preference");
       console.error(err);
     }
-  };
+  }, [model, notificationThreshold, setNotificationPreferences]);
 
-  const handleRemoveNotification = async (preferenceId) => {
+  const handleRemoveNotification = useCallback(async (preferenceId) => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${preferenceId}`, {
         method: "DELETE"
@@ -115,9 +115,9 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
       setMessage("Error removing notification preference");
       console.error(err);
     }
-  };
+  }, [setNotificationPreferences]);
 
-  const handleAddFavorite = () => {
+  const handleAddFavorite = useCallback(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
     
@@ -159,7 +159,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
           console.error(err);
         }
       });
-  };
+  }, [model, onFavoriteAdded]);
   
 
   return (
