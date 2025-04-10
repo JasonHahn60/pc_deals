@@ -1,0 +1,25 @@
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Build files
+build/
+dist/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/ 
