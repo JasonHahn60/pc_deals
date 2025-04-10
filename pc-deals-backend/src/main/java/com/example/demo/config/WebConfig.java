@@ -47,7 +47,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(trimmedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowCredentials(true)
+                .maxAge(3600); // Cache preflight requests for 1 hour
     }
 
     

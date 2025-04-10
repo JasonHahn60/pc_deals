@@ -32,8 +32,12 @@ public class UserService {
         // The password is already hashed with SHA-256 from the frontend
         // We'll hash it again with BCrypt for additional security
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
-        String sql = "INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, CURRENT_TIMESTAMP(6))";
-        jdbcTemplate.update(sql, email, hashed);
+        
+        // Check if this is the first user (admin)
+        boolean isFirstUser = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Integer.class) == 0;
+        
+        String sql = "INSERT INTO users (email, password_hash, created_at, is_admin) VALUES (?, ?, CURRENT_TIMESTAMP(6), ?)";
+        jdbcTemplate.update(sql, email, hashed, isFirstUser);
         
         // Return the newly created user
         return getUserByEmail(email);
