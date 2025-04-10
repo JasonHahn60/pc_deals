@@ -11,6 +11,8 @@ import { AuthProvider } from './contexts/AuthContext';
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [selectedModel, setSelectedModel] = useState("");
+  const [notificationPreferences, setNotificationPreferences] = useState([]);
 
   useEffect(() => {
     // Check for stored token and user info on initial load
@@ -35,6 +37,19 @@ function App() {
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+  };
+
+  const handleFavoriteAdded = () => {
+    // Refresh favorites list
+    if (user) {
+      fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+        .then(res => res.json())
+        .catch(err => console.error("Error fetching favorites:", err));
+    }
   };
 
   return (
@@ -78,18 +93,29 @@ function App() {
                     </div>
                     <div className="bg-white rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Price History</h2>
-                      <GPUPriceHistoryViewer />
+                      <GPUPriceHistoryViewer 
+                        model={selectedModel}
+                        setModel={setSelectedModel}
+                        onFavoriteAdded={handleFavoriteAdded}
+                        notificationPreferences={notificationPreferences}
+                        setNotificationPreferences={setNotificationPreferences}
+                      />
                     </div>
                   </div>
                   {user && (
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-xl font-semibold mb-4">Favorite GPUs</h2>
-                        <FavoriteList />
+                        <FavoriteList user={user} token={token} />
                       </div>
                       <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-xl font-semibold mb-4">Price Alerts</h2>
-                        <PriceAlerts />
+                        <PriceAlerts 
+                          user={user}
+                          token={token}
+                          notificationPreferences={notificationPreferences}
+                          setNotificationPreferences={setNotificationPreferences}
+                        />
                       </div>
                     </div>
                   )}
