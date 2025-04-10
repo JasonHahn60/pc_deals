@@ -45,8 +45,16 @@ public class JwtFilter implements Filter {
             }
         }
 
+        // Check for custom header that only our frontend would send
+        String appHeader = req.getHeader("X-PC-Deals-App");
+        if (appHeader == null || !appHeader.equals("true")) {
+            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            res.getWriter().write("Direct API access not allowed");
+            return;
+        }
+
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-PC-Deals-App");
         res.setHeader("Access-Control-Allow-Credentials", "true");
 
         // ✅ Allow preflight OPTIONS request to go through
