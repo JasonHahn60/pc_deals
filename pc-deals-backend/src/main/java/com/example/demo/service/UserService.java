@@ -85,12 +85,12 @@ public class UserService {
             // If table doesn't exist, create it
             String createTableSql = """
                 CREATE TABLE IF NOT EXISTS user_favorites (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    user_id INT NOT NULL,
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
                     model VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                    UNIQUE KEY unique_user_model (user_id, model)
+                    UNIQUE (user_id, model)
                 )
             """;
             jdbcTemplate.execute(createTableSql);
@@ -110,12 +110,12 @@ public class UserService {
             // If table doesn't exist, create it
             String createTableSql = """
                 CREATE TABLE IF NOT EXISTS user_favorites (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    user_id INT NOT NULL,
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
                     model VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                    UNIQUE KEY unique_user_model (user_id, model)
+                    UNIQUE (user_id, model)
                 )
             """;
             jdbcTemplate.execute(createTableSql);
@@ -131,12 +131,12 @@ public class UserService {
             // If table doesn't exist, create it
             String createTableSql = """
                 CREATE TABLE IF NOT EXISTS user_favorites (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    user_id INT NOT NULL,
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
                     model VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                    UNIQUE KEY unique_user_model (user_id, model)
+                    UNIQUE (user_id, model)
                 )
             """;
             jdbcTemplate.execute(createTableSql);
