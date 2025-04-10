@@ -45,6 +45,15 @@ public class JwtFilter implements Filter {
             }
         }
 
+        // Handle preflight OPTIONS request
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-PC-Deals-App");
+            res.setHeader("Access-Control-Allow-Credentials", "true");
+            res.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
         // Check for custom header that only our frontend would send
         String appHeader = req.getHeader("X-PC-Deals-App");
         if (appHeader == null || !appHeader.equals("true")) {
@@ -56,12 +65,6 @@ public class JwtFilter implements Filter {
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-PC-Deals-App");
         res.setHeader("Access-Control-Allow-Credentials", "true");
-
-        // ✅ Allow preflight OPTIONS request to go through
-        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
-            res.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
 
         // 🔐 Token validation for protected endpoints
         String path = req.getRequestURI();
