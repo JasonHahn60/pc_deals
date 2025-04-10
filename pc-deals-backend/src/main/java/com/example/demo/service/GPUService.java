@@ -90,14 +90,14 @@ public class GPUService {
     public Map<String, Object> analyzePrice(String model, int price) {
         String sql = """
             SELECT 
-                (SELECT ROUND(AVG(price)) FROM gpu_prices WHERE model = ? AND reddit_posted_at >= NOW() - INTERVAL 30 DAY) AS avg_30,
-                (SELECT STDDEV(price) FROM gpu_prices WHERE model = ? AND reddit_posted_at >= NOW() - INTERVAL 30 DAY) AS std_30,
-                (SELECT ROUND(AVG(price)) FROM gpu_prices WHERE model = ? AND reddit_posted_at >= NOW() - INTERVAL 7 DAY) AS avg_7
+                (SELECT ROUND(AVG(price)) FROM gpu_prices WHERE model = ? AND reddit_posted_at >= NOW() - INTERVAL '7 days') AS avg_7,
+                (SELECT STDDEV(price) FROM gpu_prices WHERE model = ? AND reddit_posted_at >= NOW() - INTERVAL '7 days') AS std_7,
+                (SELECT ROUND(AVG(price)) FROM gpu_prices WHERE model = ? AND reddit_posted_at >= NOW() - INTERVAL '7 days') AS avg_7
         """;
     
         Map<String, Object> stats = jdbcTemplate.queryForMap(sql, model, model, model);
     
-        if (stats.get("avg_30") == null || stats.get("std_30") == null || stats.get("avg_7") == null) {
+        if (stats.get("avg_7") == null || stats.get("std_7") == null || stats.get("avg_7") == null) {
             return Map.of(
                 "model", model,
                 "your_price", price,
@@ -105,23 +105,22 @@ public class GPUService {
             );
         }
     
-        int avg30 = ((Number) stats.get("avg_30")).intValue();
-        double stddev30 = ((Number) stats.get("std_30")).doubleValue();
         int avg7 = ((Number) stats.get("avg_7")).intValue();
+        double stddev7 = ((Number) stats.get("std_7")).doubleValue();
     
-        if (stddev30 == 0.0) {
+        if (stddev7 == 0.0) {
             return Map.of(
                 "model", model,
-                "average_price", avg30,
+                "average_price", avg7,
                 "your_price", price,
                 "message", "Market is too stable to determine rating — all listings are priced the same."
             );
         }
     
-        double zScore = (price - avg30) / stddev30;
+        double zScore = (price - avg7) / stddev7;
     
         // Market shift logic
-        double trendFactor = (double)(avg7 - avg30) / avg30;
+        double trendFactor = (double)(avg7 - avg7) / avg7;
     
         // Adjust z-score based on recent dip/rise
         if (trendFactor < -0.05) {
@@ -136,16 +135,16 @@ public class GPUService {
                       : (zScore <= 0.5)  ? "⚖️ Fair price"
                       : "❌ Overpriced";
         
-        double rawDiff = ((double)(avg30 - price) / avg30) * 100;
+        double rawDiff = ((double)(avg7 - price) / avg7) * 100;
         double absDiff = Math.round(Math.abs(rawDiff) * 10.0) / 10.0;
-        String direction = (price < avg30) ? "below" : "above";
+        String direction = (price < avg7) ? "below" : "above";
                       
         double rawScore = (0 - zScore) / 2.75 * 10;
         int dealScore = (int) Math.max(0, Math.min(10, Math.round(rawScore)));        
 
         return Map.of(
             "model", model,
-            "average_price", avg30,
+            "average_price", avg7,
             "your_price", price,
             "price_rating", rating,
             "percent_vs_market", absDiff,
@@ -219,7 +218,7 @@ public class GPUService {
                         FROM gpu_prices g2
                         WHERE g2.model = gpu_prices.model
                         AND g2.reddit_posted_at >= (
-                            SELECT MAX(reddit_posted_at) - INTERVAL 30 DAY 
+                            SELECT MAX(reddit_posted_at) - INTERVAL '7 days'
                             FROM gpu_prices
                         )
                     ) as avg_price,
@@ -228,13 +227,13 @@ public class GPUService {
                         FROM gpu_prices g2
                         WHERE g2.model = gpu_prices.model
                         AND g2.reddit_posted_at >= (
-                            SELECT MAX(reddit_posted_at) - INTERVAL 30 DAY 
+                            SELECT MAX(reddit_posted_at) - INTERVAL '7 days'
                             FROM gpu_prices
                         )
                     ) as price_stddev
                 FROM gpu_prices
                 WHERE reddit_posted_at >= (
-                    SELECT MAX(reddit_posted_at) - INTERVAL ? DAY 
+                    SELECT MAX(reddit_posted_at) - (INTERVAL '1 day' * ?)
                     FROM gpu_prices
                 )
             )
@@ -245,7 +244,7 @@ public class GPUService {
             WHERE price_stddev > 0
         """;
         
-        Double avgScore = jdbcTemplate.queryForObject(sql, Double.class, period.equals("7 DAY") ? 7 : 30);
+        Double avgScore = jdbcTemplate.queryForObject(sql, Double.class, period.equals("7 days") ? 7 : 30);
         return avgScore != null ? avgScore : 0.0;
     }
 
@@ -257,7 +256,7 @@ public class GPUService {
             String hotGpusSql = """
                 SELECT model, COUNT(*) AS listings
                 FROM gpu_prices
-                WHERE reddit_posted_at >= NOW() - INTERVAL 7 DAY
+                WHERE reddit_posted_at >= NOW() - INTERVAL '7 days'
                 AND price IS NOT NULL
                 GROUP BY model
                 HAVING COUNT(*) > 0
@@ -275,7 +274,7 @@ public class GPUService {
                         AVG(NULLIF(price, 0)) as avg_price,
                         STDDEV(NULLIF(price, 0)) as price_stddev
                     FROM gpu_prices
-                    WHERE reddit_posted_at >= NOW() - INTERVAL 30 DAY
+                    WHERE reddit_posted_at >= NOW() - INTERVAL '7 days'
                     AND price IS NOT NULL
                     GROUP BY model
                     HAVING price_stddev > 0
@@ -287,12 +286,12 @@ public class GPUService {
                         ms.avg_price,
                         ms.price_stddev,
                         CASE 
-                            WHEN g.reddit_posted_at >= NOW() - INTERVAL 7 DAY THEN 'week'
+                            WHEN g.reddit_posted_at >= NOW() - INTERVAL '7 days' THEN 'week'
                             ELSE 'month'
                         END as period
                     FROM gpu_prices g
                     JOIN model_stats ms ON g.model = ms.model
-                    WHERE g.reddit_posted_at >= NOW() - INTERVAL 30 DAY
+                    WHERE g.reddit_posted_at >= NOW() - INTERVAL '7 days'
                     AND g.price IS NOT NULL
                     AND g.price > 0
                 )
@@ -347,7 +346,7 @@ public class GPUService {
                         AVG(NULLIF(price, 0)) as avg_price,
                         STDDEV(NULLIF(price, 0)) as price_stddev
                     FROM gpu_prices
-                    WHERE reddit_posted_at >= NOW() - INTERVAL 30 DAY
+                    WHERE reddit_posted_at >= NOW() - INTERVAL '7 days'
                     AND price IS NOT NULL
                     GROUP BY model
                     HAVING price_stddev > 0
@@ -364,7 +363,7 @@ public class GPUService {
                     )) as deal_score
                 FROM gpu_prices g
                 JOIN model_stats ms ON g.model = ms.model
-                WHERE g.reddit_posted_at >= NOW() - INTERVAL 7 DAY
+                WHERE g.reddit_posted_at >= NOW() - INTERVAL '7 days'
                 AND g.price IS NOT NULL
                 AND g.price > 0
                 ORDER BY deal_score DESC
