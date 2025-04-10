@@ -5,13 +5,17 @@ const PriceAlerts = ({ notificationPreferences, setNotificationPreferences }) =>
 
   const handleRemoveNotification = async (preferenceId) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${preferenceId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/notifications/preferences/${preferenceId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            "X-PC-Deals-App": "true"
+          },
         }
-      });
+      );
 
       if (response.ok) {
         setMessage("Alert removed");
