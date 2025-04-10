@@ -96,12 +96,17 @@ function App() {
     const token = localStorage.getItem("token");
     if (!storedUser || !token) return;
 
-    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${storedUser.user_id}&model=${encodeURIComponent(model)}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
+    fetch(
+      `${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${storedUser.user_id}&model=${model}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "X-PC-Deals-App": "true"
+        },
+      }
+    )
       .then((res) => res.json())
       .then(() => fetchFavorites(storedUser.user_id));
   };
