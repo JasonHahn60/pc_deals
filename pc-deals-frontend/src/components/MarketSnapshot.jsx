@@ -14,7 +14,11 @@ const MarketSnapshot = () => {
   useEffect(() => {
     const fetchSnapshot = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/gpus/market-snapshot`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/gpus/market-snapshot`, {
+          headers: {
+            "X-PC-Deals-App": "true"
+          }
+        });
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }

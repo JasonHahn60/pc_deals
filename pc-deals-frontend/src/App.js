@@ -38,6 +38,7 @@ function App() {
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${localStorage.getItem("token")}`,
+              "X-PC-Deals-App": "true"
             }
           })
             .then(res => res.json())
@@ -72,27 +73,22 @@ function App() {
     setFavorites([]);
   };
 
-  const fetchFavorites = (userId) => {
-    const token = localStorage.getItem("token");
-  
-    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${userId}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setFavorites(data);
-        } else {
-          console.warn("Unexpected response shape");
-          setFavorites([]);
+  const fetchFavorites = async (userId) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "X-PC-Deals-App": "true"
         }
-      })
-      .catch((err) => {
-        console.error("Error fetching favorites:", err);
-        setFavorites([]);
       });
+      if (response.ok) {
+        const data = await response.json();
+        setFavorites(data);
+      }
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+    }
   };
 
   const handleRemoveFavorite = (model) => {

@@ -37,7 +37,13 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
-      fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${user.user_id}`)
+      fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${user.user_id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "X-PC-Deals-App": "true"
+        }
+      })
         .then(res => res.json())
         .then(data => setNotificationPreferences(data))
         .catch(err => console.error("Error fetching preferences:", err));
@@ -52,7 +58,11 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
     e.preventDefault();
     if (!price || isNaN(price)) return;
 
-    fetch(`${process.env.REACT_APP_API_URL}/api/gpus/price-analysis?model=${model}&price=${price}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/gpus/price-analysis?model=${model}&price=${price}`, {
+      headers: {
+        "X-PC-Deals-App": "true"
+      }
+    })
       .then((res) => res.json())
       .then((data) => setAnalysis(data))
       .catch((err) => console.error("Error analyzing price:", err));
@@ -79,6 +89,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            "X-PC-Deals-App": "true"
           }
         }
       );
@@ -101,14 +112,21 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
   const handleRemoveNotification = async (preferenceId) => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${preferenceId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          "X-PC-Deals-App": "true"
+        }
       });
 
       if (response.ok) {
         setMessage("✅ Notification preference removed");
         // Refresh preferences
         const user = JSON.parse(localStorage.getItem("user"));
-        const updatedPreferences = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${user.user_id}`).then(res => res.json());
+        const updatedPreferences = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${user.user_id}`, {
+          headers: {
+            "X-PC-Deals-App": "true"
+          }
+        }).then(res => res.json());
         setNotificationPreferences(updatedPreferences);
       }
     } catch (err) {
@@ -131,6 +149,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
+        "X-PC-Deals-App": "true"
       },
       body: JSON.stringify({ user_id: storedUser.user_id, model }),
     })
