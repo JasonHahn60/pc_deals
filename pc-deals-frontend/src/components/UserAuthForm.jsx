@@ -20,7 +20,10 @@ const UserAuthForm = ({ onLoginSuccess, onLogout }) => {
       const hashedPassword = hashPassword(password);
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/users/${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-PC-Deals-App": "true"
+        },
         body: JSON.stringify({ email, password: hashedPassword }),
       });
 

@@ -12,7 +12,12 @@ const PriceAnalyzer = ({ model }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/gpus/price-analysis?model=${model}&price=${price}`
+        `${process.env.REACT_APP_API_URL}/api/gpus/price-analysis?model=${model}&price=${price}`,
+        {
+          headers: {
+            "X-PC-Deals-App": "true"
+          }
+        }
       );
 
       if (!response.ok) {
