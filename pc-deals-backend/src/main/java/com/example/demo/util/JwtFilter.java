@@ -31,10 +31,28 @@ public class JwtFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
-        // Get the request origin
+        // Handle preflight OPTIONS request first
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            // Get the request origin
+            String origin = req.getHeader("Origin");
+            if (origin != null) {
+                String[] allowedOriginsArray = allowedOrigins.split(",");
+                for (String allowedOrigin : allowedOriginsArray) {
+                    if (origin.trim().equals(allowedOrigin.trim())) {
+                        res.setHeader("Access-Control-Allow-Origin", origin);
+                        break;
+                    }
+                }
+            }
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-PC-Deals-App");
+            res.setHeader("Access-Control-Allow-Credentials", "true");
+            res.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
+        // For non-OPTIONS requests, check origin and custom header
         String origin = req.getHeader("Origin");
-        
-        // Check if the origin is in the allowed list
         if (origin != null) {
             String[] allowedOriginsArray = allowedOrigins.split(",");
             for (String allowedOrigin : allowedOriginsArray) {
@@ -43,15 +61,6 @@ public class JwtFilter implements Filter {
                     break;
                 }
             }
-        }
-
-        // Handle preflight OPTIONS request
-        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
-            res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-PC-Deals-App");
-            res.setHeader("Access-Control-Allow-Credentials", "true");
-            res.setStatus(HttpServletResponse.SC_OK);
-            return;
         }
 
         // Check for custom header that only our frontend would send
