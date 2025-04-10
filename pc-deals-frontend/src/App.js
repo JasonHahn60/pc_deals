@@ -10,107 +10,31 @@ import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [model, setModel] = useState("");
-  const [favorites, setFavorites] = useState([]);
-  const [notificationPreferences, setNotificationPreferences] = useState([]);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed && parsed.user_id) {  // Only set user and fetch favorites if we have a valid user_id
-          setUser(parsed);
-          fetchFavorites(parsed.user_id);
-        }
-      } catch (err) {
-        console.error("Error parsing stored user:", err);
-        localStorage.removeItem("user");  // Clear invalid data
-      }
+    // Check for stored token and user info on initial load
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
     }
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed && parsed.user_id) {
-          fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${parsed.user_id}`, {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("token")}`,
-            }
-          })
-            .then(res => res.json())
-            .then(data => setNotificationPreferences(data))
-            .catch(err => console.error("Error fetching preferences:", err));
-        }
-      } catch (err) {
-        console.error("Error parsing stored user:", err);
-      }
-    }
-  }, [user]);
-
-  const handleLoginSuccess = () => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed && parsed.user_id) {  // Only set user and fetch favorites if we have a valid user_id
-          setUser(parsed);
-          fetchFavorites(parsed.user_id);
-        }
-      } catch (err) {
-        console.error("Error parsing stored user:", err);
-      }
-    }
+  const handleLoginSuccess = (userData, authToken) => {
+    setUser(userData);
+    setToken(authToken);
+    localStorage.setItem('token', authToken);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
     setUser(null);
-    setFavorites([]);
-  };
-
-  const fetchFavorites = (userId) => {
-    const token = localStorage.getItem("token");
-  
-    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${userId}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setFavorites(data);
-        } else {
-          console.warn("Unexpected response shape");
-          setFavorites([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching favorites:", err);
-        setFavorites([]);
-      });
-  };
-
-  const handleRemoveFavorite = (model) => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token");
-    if (!storedUser || !token) return;
-
-    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${storedUser.user_id}&model=${encodeURIComponent(model)}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then(() => fetchFavorites(storedUser.user_id));
+    setToken(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   return (
@@ -147,7 +71,28 @@ function App() {
               <Route path="/admin" element={<Admin />} />
               <Route path="/" element={
                 <>
-                  {/* ... existing home page content ... */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <h2 className="text-xl font-semibold mb-4">Market Snapshot</h2>
+                      <MarketSnapshot />
+                    </div>
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <h2 className="text-xl font-semibold mb-4">Price History</h2>
+                      <GPUPriceHistoryViewer />
+                    </div>
+                  </div>
+                  {user && (
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4">Favorite GPUs</h2>
+                        <FavoriteList />
+                      </div>
+                      <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4">Price Alerts</h2>
+                        <PriceAlerts />
+                      </div>
+                    </div>
+                  )}
                 </>
               } />
             </Routes>
