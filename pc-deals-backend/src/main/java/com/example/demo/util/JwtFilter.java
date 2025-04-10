@@ -31,8 +31,20 @@ public class JwtFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
-        // 🔧 Always add CORS headers manually for safety
-        res.setHeader("Access-Control-Allow-Origin", allowedOrigins.split(",")[0]);
+        // Get the request origin
+        String origin = req.getHeader("Origin");
+        
+        // Check if the origin is in the allowed list
+        if (origin != null) {
+            String[] allowedOriginsArray = allowedOrigins.split(",");
+            for (String allowedOrigin : allowedOriginsArray) {
+                if (origin.trim().equals(allowedOrigin.trim())) {
+                    res.setHeader("Access-Control-Allow-Origin", origin);
+                    break;
+                }
+            }
+        }
+
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
         res.setHeader("Access-Control-Allow-Credentials", "true");
