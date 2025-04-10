@@ -166,7 +166,7 @@ const PriceHistoryChart = ({ model }) => {
   const [timeRange, setTimeRange] = useState("all");
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/gpus/price-history?model=${model}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/gpus/price-history?model=${model}`)
       .then((res) => res.json())
       .then((json) => {
         console.log("📊 Raw price history data:", json);

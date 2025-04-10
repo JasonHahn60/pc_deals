@@ -12,7 +12,7 @@ const PriceAnalyzer = ({ model }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/gpus/price-analysis?model=${model}&price=${price}`
+        `${process.env.REACT_APP_API_URL}/api/gpus/price-analysis?model=${model}&price=${price}`
       );
 
       if (!response.ok) {

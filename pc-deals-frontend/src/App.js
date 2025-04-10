@@ -34,7 +34,7 @@ function App() {
       try {
         const parsed = JSON.parse(storedUser);
         if (parsed && parsed.user_id) {
-          fetch(`http://localhost:8080/api/notifications/preferences/${parsed.user_id}`, {
+          fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${parsed.user_id}`, {
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -75,7 +75,7 @@ function App() {
   const fetchFavorites = (userId) => {
     const token = localStorage.getItem("token");
   
-    fetch(`http://localhost:8080/api/users/favorites?user_id=${userId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${userId}`, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
@@ -100,7 +100,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (!storedUser || !token) return;
 
-    fetch(`http://localhost:8080/api/users/favorites?user_id=${storedUser.user_id}&model=${encodeURIComponent(model)}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites?user_id=${storedUser.user_id}&model=${encodeURIComponent(model)}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,

@@ -37,7 +37,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
-      fetch(`http://localhost:8080/api/notifications/preferences/${user.user_id}`)
+      fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${user.user_id}`)
         .then(res => res.json())
         .then(data => setNotificationPreferences(data))
         .catch(err => console.error("Error fetching preferences:", err));
@@ -52,7 +52,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
     e.preventDefault();
     if (!price || isNaN(price)) return;
 
-    fetch(`http://localhost:8080/api/gpus/price-analysis?model=${model}&price=${price}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/gpus/price-analysis?model=${model}&price=${price}`)
       .then((res) => res.json())
       .then((data) => setAnalysis(data))
       .catch((err) => console.error("Error analyzing price:", err));
@@ -73,7 +73,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/notifications/preferences?userId=${user.user_id}&gpuModel=${model}&priceThreshold=${notificationThreshold}`,
+        `${process.env.REACT_APP_API_URL}/api/notifications/preferences?userId=${user.user_id}&gpuModel=${model}&priceThreshold=${notificationThreshold}`,
         { 
           method: "POST",
           headers: {
@@ -100,7 +100,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
 
   const handleRemoveNotification = async (preferenceId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/notifications/preferences/${preferenceId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${preferenceId}`, {
         method: "DELETE"
       });
 
@@ -108,7 +108,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
         setMessage("✅ Notification preference removed");
         // Refresh preferences
         const user = JSON.parse(localStorage.getItem("user"));
-        const updatedPreferences = await fetch(`http://localhost:8080/api/notifications/preferences/${user.user_id}`).then(res => res.json());
+        const updatedPreferences = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${user.user_id}`).then(res => res.json());
         setNotificationPreferences(updatedPreferences);
       }
     } catch (err) {
@@ -126,7 +126,7 @@ const GPUPriceHistoryViewer = ({ model, setModel, onFavoriteAdded, notificationP
       return;
     }
   
-    fetch("http://localhost:8080/api/users/favorites", {
+    fetch(`${process.env.REACT_APP_API_URL}/api/users/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

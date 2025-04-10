@@ -5,7 +5,7 @@ const PriceAlerts = ({ notificationPreferences, setNotificationPreferences }) =>
 
   const handleRemoveNotification = async (preferenceId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/notifications/preferences/${preferenceId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/notifications/preferences/${preferenceId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
