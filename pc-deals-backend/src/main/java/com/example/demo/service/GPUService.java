@@ -3,7 +3,6 @@ package com.example.demo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.AccessDeniedException;
 
 //import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,9 +18,6 @@ public class GPUService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private UserService userService;
 
     public List<Map<String, Object>> getAllSavedListings() {
         String sql = "SELECT model, price, reddit_url AS url, reddit_posted_at AS timestamp FROM gpu_prices ORDER BY reddit_posted_at DESC";
@@ -387,19 +383,5 @@ public class GPUService {
         }
 
         return snapshot;
-    }
-
-    public List<Map<String, Object>> getOutliers(String email) {
-        if (!userService.isUserAdmin(email)) {
-            throw new AccessDeniedException("Only admins can access outliers");
-        }
-        return getPriceOutliers(1.75);
-    }
-
-    public void deleteOutliers(String email) {
-        if (!userService.isUserAdmin(email)) {
-            throw new AccessDeniedException("Only admins can delete outliers");
-        }
-        deletePriceOutliers(1.75);
     }
 }

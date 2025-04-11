@@ -32,11 +32,6 @@ public class User {
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "is_admin", nullable = false)
-    private boolean isAdmin = false;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-
     // Getters and Setters
     public Integer getId() {
         return id;
@@ -76,13 +71,5 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public boolean isAdmin() {
-        return isAdmin;
-    }
-
-    public void setAdmin(boolean admin) {
-        isAdmin = admin;
     }
 }

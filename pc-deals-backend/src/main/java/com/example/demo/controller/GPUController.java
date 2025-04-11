@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.service.GPUService;
-import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +15,6 @@ public class GPUController {
 
     @Autowired
     private GPUService gpuService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     //GET ALL OR SPECIFIC MODEL (listings?model=3080)
     @GetMapping("/listings")
@@ -53,32 +49,20 @@ public class GPUController {
     }
 
     //GET OUTLIERS ABOVE/BELOW THRESHOLD
-    @GetMapping("/outliers")
-    public ResponseEntity<?> getOutliers(@RequestHeader("Authorization") String token) {
-        try {
-            String email = jwtUtil.validateToken(token.replace("Bearer ", ""));
-            if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
-            }
-            return ResponseEntity.ok(gpuService.getOutliers(email));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+    @GetMapping("/listings/outliers")
+    public List<Map<String, Object>> getOutliers(@RequestParam(defaultValue = "1.75") double threshold) {
+        return gpuService.getPriceOutliers(threshold);
     }
 
     //DELETE OUTLIERS
-    @DeleteMapping("/delete-outliers")
-    public ResponseEntity<?> deleteOutliers(@RequestHeader("Authorization") String token) {
-        try {
-            String email = jwtUtil.validateToken(token.replace("Bearer ", ""));
-            if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
-            }
-            gpuService.deleteOutliers(email);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+    @GetMapping("/listings/delete-outliers")
+    public Map<String, Object> deleteOutliers(@RequestParam(defaultValue = "1.75") double threshold) {
+        int deleted = gpuService.deletePriceOutliers(threshold);
+        return Map.of(
+            "threshold_multiplier", threshold,
+            "deleted_count", deleted,
+            "message", "Outliers deleted successfully"
+        );
     }
 
     @GetMapping("/market-snapshot")
