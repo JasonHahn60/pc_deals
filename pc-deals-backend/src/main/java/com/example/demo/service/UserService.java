@@ -143,4 +143,9 @@ public class UserService {
             return List.of(); // Return empty list since table was just created
         }
     }
+
+    public boolean isUserAdmin(String username) {
+        User user = getUserByEmail(username);
+        return user != null && user.isAdmin();
+    }
 }
