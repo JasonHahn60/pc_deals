@@ -16,23 +16,23 @@ public class RedditScraperService {
     @Autowired
     private RedditService redditService;
 
-    // Always runs every minute, but we conditionally skip based on the time. 
-    @Scheduled(fixedRate = 60000) //60,000 = 1 min
+    // Always runs every 5 minutes, but we conditionally skip based on the time. 
+    @Scheduled(fixedRate = 300000) //300,000 = 5 min
     public void fetchNewListings() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Chicago"));
         int currentHour = now.getHour();
 
-        // Active scraping between 9am–10pm every minute
-        // Outside of those hours, run only every 10 minutes (if minute % 10 == 0)
+        // Active scraping between 9am–10pm every 5 minutes
+        // Outside of those hours, run only every 30 minutes (if minute % 30 == 0)
         int currentMinute = now.getMinute();
 
         boolean shouldRunNow =
-            (currentHour >= 9 && currentHour < 24) ||  // 9:00 to 21:59 → every 1 minute
-            (currentMinute % 10 == 0);                // Other hours → only every 10 minutes
+            (currentHour >= 9 && currentHour < 24) ||  // 9:00 to 21:59 → every 5 minutes
+            (currentMinute % 30 == 0);                // Other hours → only every 30 minutes
         System.out.println("Hour: " + currentHour);
         System.out.println("Minute: " + currentMinute);
         if (!shouldRunNow) {
-            logger.info("Skipped fetch — outside active hours and not a 10-minute interval");
+            logger.info("Skipped fetch — outside active hours and not a 30-minute interval");
             return;
         }
 
