@@ -18,7 +18,7 @@ A full-stack application that tracks GPU prices from Reddit's hardware swap comm
 - **Backend**: Spring Boot (Java)
 - **Database**: MySQL
 - **Containerization**: Docker
-- **APIs**: Reddit API, OpenAI API for price analysis
+- **APIs**: Reddit API, OpenAI API
 
 ## Local Development
 
